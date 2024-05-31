@@ -205,6 +205,13 @@ static inline u64 kvm_read_edx_eax(struct kvm_vcpu *vcpu)
 		| ((u64)(kvm_rdx_read(vcpu) & -1u) << 32);
 }
 
+static inline u32 kvm_read_pkrs(struct kvm_vcpu *vcpu)
+{
+	if (!kvm_register_is_available(vcpu, VCPU_EXREG_PKRS))
+		static_call(kvm_x86_cache_reg)(vcpu, VCPU_EXREG_PKRS);
+	return vcpu->arch.pkrs;
+}
+
 static inline void enter_guest_mode(struct kvm_vcpu *vcpu)
 {
 	vcpu->arch.hflags |= HF_GUEST_MASK;

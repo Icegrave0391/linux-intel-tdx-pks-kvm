@@ -210,6 +210,8 @@ struct nested_vmx {
 	u64 pre_vmenter_debugctl;
 	u64 pre_vmenter_bndcfgs;
 
+	u64 vmcs01_guest_pkrs;
+
 	/* to migrate it to L1 if L2 writes to L1's CR8 directly */
 	int l1_tpr_threshold;
 
@@ -346,7 +348,7 @@ struct vcpu_vmx {
 	struct lbr_desc lbr_desc;
 
 	/* Save desired MSR intercept (read: pass-through) state */
-#define MAX_POSSIBLE_PASSTHROUGH_MSRS	16
+#define MAX_POSSIBLE_PASSTHROUGH_MSRS	17
 	struct {
 		DECLARE_BITMAP(read, MAX_POSSIBLE_PASSTHROUGH_MSRS);
 		DECLARE_BITMAP(write, MAX_POSSIBLE_PASSTHROUGH_MSRS);
@@ -620,7 +622,8 @@ BUILD_CONTROLS_SHADOW(tertiary_exec, TERTIARY_VM_EXEC_CONTROL, 64)
 				(1 << VCPU_EXREG_CR3) |         \
 				(1 << VCPU_EXREG_CR4) |         \
 				(1 << VCPU_EXREG_EXIT_INFO_1) | \
-				(1 << VCPU_EXREG_EXIT_INFO_2))
+				(1 << VCPU_EXREG_EXIT_INFO_2) | \
+				(1 << VCPU_EXREG_PKRS))
 
 static inline unsigned long vmx_l1_guest_owned_cr0_bits(void)
 {
@@ -723,6 +726,13 @@ static inline int vmx_get_instr_info_reg2(u32 vmx_instr_info)
 static inline bool vmx_can_use_ipiv(struct kvm_vcpu *vcpu)
 {
 	return  lapic_in_kernel(vcpu) && enable_ipiv;
+}
+
+static inline void vmx_set_host_pkrs(struct vmcs_host_state *host, u32 pkrs){
+	if (unlikely(pkrs != host->pkrs)) {
+		vmcs_write64(HOST_IA32_PKRS, pkrs);
+		host->pkrs = pkrs;
+	}
 }
 
 #endif /* __KVM_X86_VMX_H */

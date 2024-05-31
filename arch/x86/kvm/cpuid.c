@@ -646,18 +646,23 @@ void kvm_set_cpu_caps(void)
 		F(AVX512_VPOPCNTDQ) | F(UMIP) | F(AVX512_VBMI2) | F(GFNI) |
 		F(VAES) | F(VPCLMULQDQ) | F(AVX512_VNNI) | F(AVX512_BITALG) |
 		F(CLDEMOTE) | F(MOVDIRI) | F(MOVDIR64B) | 0 /*WAITPKG*/ |
-		F(SGX_LC) | F(BUS_LOCK_DETECT)
+		F(SGX_LC) | F(BUS_LOCK_DETECT) | F(PKS)
 	);
 	/* Set LA57 based on hardware capability. */
 	if (cpuid_ecx(7) & F(LA57))
 		kvm_cpu_cap_set(X86_FEATURE_LA57);
 
 	/*
-	 * PKU not yet implemented for shadow paging and requires OSPKE
-	 * to be set on the host. Clear it if that is not the case
+	 * Protection Keys are not supported for shadow paging.  PKU further
+	 * requires OSPKE to be set on the host in order to use {RD,WR}PKRU to
+	 * save/restore the guests PKRU.
 	 */
-	if (!tdp_enabled || !boot_cpu_has(X86_FEATURE_OSPKE))
+	if (!tdp_enabled) {
 		kvm_cpu_cap_clear(X86_FEATURE_PKU);
+		kvm_cpu_cap_clear(X86_FEATURE_PKS);
+	} else if (!boot_cpu_has(X86_FEATURE_OSPKE)) {
+		kvm_cpu_cap_clear(X86_FEATURE_PKU);
+	}
 
 	kvm_cpu_cap_mask(CPUID_7_EDX,
 		F(AVX512_4VNNIW) | F(AVX512_4FMAPS) | F(SPEC_CTRL) |
