@@ -2762,6 +2762,17 @@ static int tdx_td_init(struct kvm *kvm, struct kvm_tdx_cmd *cmd)
 		goto out;
 	}
 
+	/*
+	 * Chuqi: On a PKS-enabled machine, let's try to always set the PKS
+	 * as a desired TD Attribute
+	 */
+	if (kvm_cpu_cap_has(X86_FEATURE_PKS)) {
+		init_vm->attributes |= TDX_TD_ATTRIBUTE_PKS;
+		printk(KERN_INFO "CHUQI-TDX: PKS is available and enabled as the TD.ATTRIBUTES[30].\n");
+	} else {
+		printk(KERN_INFO "CHUQI-TDX: PKS is unavailable on the host machine.\n");
+	}
+
 	ret = setup_tdparams(kvm, td_params, init_vm);
 	if (ret)
 		goto out;
