@@ -4609,6 +4609,8 @@ static u32 vmx_secondary_exec_control(struct vcpu_vmx *vmx)
 		exec_control &= ~SECONDARY_EXEC_ENABLE_EPT;
 		exec_control &= ~SECONDARY_EXEC_EPT_VIOLATION_VE;
 		enable_unrestricted_guest = 0;
+		printk("vmx_secondary_exec_control: enable_unrestricted_guest=%d.\n",
+			enable_unrestricted_guest);
 	}
 	if (!enable_unrestricted_guest)
 		exec_control &= ~SECONDARY_EXEC_UNRESTRICTED_GUEST;
@@ -8364,8 +8366,12 @@ __init int vmx_hardware_setup(void)
 	if (!cpu_has_vmx_ept_ad_bits() || !enable_ept)
 		enable_ept_ad_bits = 0;
 
-	if (!cpu_has_vmx_unrestricted_guest() || !enable_ept)
+	if (!cpu_has_vmx_unrestricted_guest() || !enable_ept) {
 		enable_unrestricted_guest = 0;
+		printk("vmx_hardware_setup: enable_unrestricted_guest=%d.\n",
+			enable_unrestricted_guest);	
+	}
+		
 
 	if (!cpu_has_vmx_flexpriority())
 		flexpriority_enabled = 0;
@@ -8555,6 +8561,10 @@ int __init vmx_init(void)
 	 */
 	if (!enable_ept)
 		allow_smaller_maxphyaddr = true;
+
+	/* check unrestricted guest */
+	printk("vmx_init: enable_unrestricted_guest=%d.\n",
+			enable_unrestricted_guest);
 
 	return 0;
 }

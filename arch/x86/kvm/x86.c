@@ -1159,6 +1159,12 @@ EXPORT_SYMBOL_GPL(__kvm_is_valid_cr4);
 
 static bool kvm_is_valid_cr4(struct kvm_vcpu *vcpu, unsigned long cr4)
 {
+	if (!__kvm_is_valid_cr4(vcpu, cr4)) {
+		printk("__kvm_is_valid_cr4 cr4=%lx false.\n", cr4);
+	}
+	if (!static_call(kvm_x86_is_valid_cr4)(vcpu, cr4)) {
+		printk("static_call(kvm_x86_is_valid_cr4) cr4=%lx false.\n", cr4);
+	}
 	return __kvm_is_valid_cr4(vcpu, cr4) &&
 	       static_call(kvm_x86_is_valid_cr4)(vcpu, cr4);
 }
