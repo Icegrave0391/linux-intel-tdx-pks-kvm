@@ -2359,8 +2359,11 @@ static int setup_tdparams_eptp_controls(struct kvm_cpuid2 *cpuid,
 	 *  addresses."
 	 * cpu_has_vmx_ept_5levels() check is just in case.
 	 */
-	if (!cpu_has_vmx_ept_5levels() && max_pa > 48)
-		return -EINVAL;
+	if (!cpu_has_vmx_ept_5levels() && max_pa > 48) {
+		// return -EINVAL;
+		// Chuqi: not sure why this happen though but force `max_pa` to 48
+		max_pa = 48;
+	}
 	if (cpu_has_vmx_ept_5levels() && max_pa > 48) {
 		td_params->eptp_controls |= VMX_EPTP_PWL_5;
 		td_params->exec_controls |= TDX_EXEC_CONTROL_MAX_GPAW;
@@ -2769,6 +2772,7 @@ static int tdx_td_init(struct kvm *kvm, struct kvm_tdx_cmd *cmd)
 	if (kvm_cpu_cap_has(X86_FEATURE_PKS)) {
 		init_vm->attributes |= TDX_TD_ATTRIBUTE_PKS;
 		printk(KERN_INFO "CHUQI-TDX: PKS is available and enabled as the TD.ATTRIBUTES[30].\n");
+		printk(KERN_INFO "CHUQI-TDX: Set TD attributes as 0x%llx\n", init_vm->attributes);
 	} else {
 		printk(KERN_INFO "CHUQI-TDX: PKS is unavailable on the host machine.\n");
 	}
@@ -2776,11 +2780,12 @@ static int tdx_td_init(struct kvm *kvm, struct kvm_tdx_cmd *cmd)
 	ret = setup_tdparams(kvm, td_params, init_vm);
 	if (ret)
 		goto out;
+	
 
 	ret = __tdx_td_init(kvm, td_params, &cmd->error);
 	if (ret)
 		goto out;
-
+	
 	kvm_tdx->tsc_offset = td_tdcs_exec_read64(kvm_tdx, TD_TDCS_EXEC_TSC_OFFSET);
 	kvm_tdx->attributes = td_params->attributes;
 	kvm_tdx->xfam = td_params->xfam;

@@ -4510,6 +4510,10 @@ static u32 vmx_exec_control(struct vcpu_vmx *vmx)
 				CPU_BASED_MONITOR_EXITING);
 	if (kvm_hlt_in_guest(vmx->vcpu.kvm))
 		exec_control &= ~CPU_BASED_HLT_EXITING;
+	
+	printk("vmx_exec_control: vmcs_config.CPU_BASED_INVLPG_EXITING=%d\n",
+	 	(exec_control & (CPU_BASED_INVLPG_EXITING)) ? 1 : 0);
+
 	return exec_control;
 }
 
@@ -8565,6 +8569,12 @@ int __init vmx_init(void)
 	/* check unrestricted guest */
 	printk("vmx_init: enable_unrestricted_guest=%d.\n",
 			enable_unrestricted_guest);
+
+	printk("vmx_init: vmcs_config.CPU_BASED_INVLPG_EXITING=%d\n",
+	 	(vmcs_config.cpu_based_exec_ctrl & (CPU_BASED_INVLPG_EXITING)) ? 1 : 0);
+
+	printk(KERN_ERR "vmx_init: GUEST_OWNED_CR0=%d.\n",
+		(vmx_l1_guest_owned_cr0_bits() & X86_CR0_WP) ? 1 : 0);
 
 	return 0;
 }
